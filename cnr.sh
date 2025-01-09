@@ -1,0 +1,1 @@
+gcc $(pkg-config --cflags gtk4) -o core_temp core_temp.c $(pkg-config --libs gtk4) && ./core_temp
