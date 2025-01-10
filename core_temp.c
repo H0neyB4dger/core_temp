@@ -29,6 +29,14 @@ double get_temp(void)
   return temperature;
 }
 
+void replace_comma_with_point(char *str) {
+  while (*str) {
+    if (*str == ',')
+      *str = '.';
+    str++;
+  }
+}
+
 gboolean tick_callback(GtkWidget *label, GdkFrameClock *frame_clock, gpointer user_data)
 {
   if (LAST_TIME == 0) {
@@ -37,6 +45,7 @@ gboolean tick_callback(GtkWidget *label, GdkFrameClock *frame_clock, gpointer us
   else if (time(NULL) - LAST_TIME >= 1) {
     char temperature[TEMP_SIZE];
     snprintf(temperature, TEMP_SIZE, TEMP_FORMAT, get_temp());
+    replace_comma_with_point(temperature);
     gtk_label_set_label(GTK_LABEL(label), temperature);
     LAST_TIME = time(NULL);
   }
@@ -47,22 +56,29 @@ void activate(GtkApplication *app, gpointer user_data)
 {
   GtkWidget *window;
   GtkWidget *label;
+  PangoAttrList *attrs;
   char temperature[TEMP_SIZE];
   char command[TEMP_SIZE];
-  int x = 100, y = 100;
+  int x = 150, y = 100;
   int move_x = SCREEN_WIDTH - x + RIGHT_MOVE_CAP, move_y = 0;
 
   window = gtk_application_window_new(app);
   gtk_window_set_default_size(GTK_WINDOW(window), x, y);
   gtk_window_set_decorated(GTK_WINDOW(window), false);
-  
+
   snprintf(temperature, TEMP_SIZE, TEMP_FORMAT, get_temp());
+  replace_comma_with_point(temperature);
   label = gtk_label_new(temperature);
+  attrs = pango_attr_list_from_string(
+    "0 128 foreground #2828d1d1dada,"
+    "0 128 font-desc \"Mono 20\""
+  );
+  gtk_label_set_attributes(GTK_LABEL(label), attrs);
   gtk_widget_add_tick_callback(label, tick_callback, NULL, NULL);
   gtk_window_set_child(GTK_WINDOW(window), label);
 
   gtk_window_present(GTK_WINDOW(window));
-
+  // print with callback?
   snprintf(command, TEMP_SIZE, "%s %d %d", MOVE_SCRIPT, move_x, move_y);
   system(command);
 }
