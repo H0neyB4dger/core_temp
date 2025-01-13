@@ -1,0 +1,9 @@
+window.background {
+  background-color: transparent;
+}
+
+.label {
+  color: #00ff55;
+  font-family: monospace;
+  font-size: 35px;
+}

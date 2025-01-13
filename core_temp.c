@@ -14,6 +14,7 @@
 #define TEMP_FILE "./temperature.txt"
 #define TEMP_SCRIPT "./temp.sh"
 #define MOVE_SCRIPT "./move.sh"
+#define STYLE_FILE "./style.css"
 
 
 time_t LAST_TIME = 0;
@@ -64,7 +65,6 @@ void activate(GtkApplication *app, gpointer user_data)
 {
   GtkWidget *window;
   GtkWidget *label;  
-  PangoAttrList *attrs;
   GtkCssProvider *provider;
   char temperature[TEMP_SIZE];
 
@@ -73,22 +73,13 @@ void activate(GtkApplication *app, gpointer user_data)
   gtk_window_set_decorated(GTK_WINDOW(window), false);
 
   provider = gtk_css_provider_new();
-  gtk_css_provider_load_from_string(
-    provider,
-    "window.background {"
-    "  background-color: transparent;"
-    "}"
-    "label."
-  );
+  gtk_css_provider_load_from_path(provider, STYLE_FILE);
   gtk_style_context_add_provider_for_display(gdk_display_get_default(), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
   snprintf(temperature, TEMP_SIZE, TEMP_FORMAT, get_temp());
   replace_comma_with_point(temperature);
   label = gtk_label_new(temperature);
-  attrs = pango_attr_list_from_string(
-      "0 128 foreground #0000ffff5555,"
-      "0 128 font-desc \"Mono 20\"");
-  gtk_label_set_attributes(GTK_LABEL(label), attrs);
+  gtk_widget_add_css_class(label, "label");
   gtk_widget_add_tick_callback(label, tick_callback, NULL, NULL);
   gtk_window_set_child(GTK_WINDOW(window), label);
 
