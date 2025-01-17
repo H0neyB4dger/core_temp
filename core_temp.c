@@ -1,3 +1,4 @@
+#include <gtk4-layer-shell/gtk4-layer-shell.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -8,8 +9,8 @@
 #define WINDOW_Y   60
 #define SCREEN_WIDTH 1895 //хз почему так, впрочем это относится ко всей программе
 #define RIGHT_MOVE_CAP 25
-#define WIN_MOVE_X (SCREEN_WIDTH - WINDOW_X + RIGHT_MOVE_CAP)
-#define WIN_MOVE_Y 40
+#define WIN_MOVE_X (SCREEN_WIDTH - WINDOW_X - 5 + RIGHT_MOVE_CAP)
+#define WIN_MOVE_Y 80
 #define TEMP_FORMAT "%.1lf\u00b0C"
 #define TEMP_FILE "./temperature.txt"
 #define TEMP_SCRIPT "./temp.sh"
@@ -63,14 +64,18 @@ gboolean tick_callback(GtkWidget *label, GdkFrameClock *frame_clock, gpointer us
 
 void activate(GtkApplication *app, gpointer user_data)
 {
-  GtkWidget *window;
+  GtkWindow *window;
   GtkWidget *label;  
   GtkCssProvider *provider;
   char temperature[TEMP_SIZE];
 
-  window = gtk_application_window_new(app);
-  gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_X, WINDOW_Y);
-  gtk_window_set_decorated(GTK_WINDOW(window), false);
+  window = GTK_WINDOW(gtk_application_window_new(app));
+  gtk_layer_init_for_window(window);
+  gtk_layer_set_layer(window, GTK_LAYER_SHELL_LAYER_TOP);
+  gtk_layer_auto_exclusive_zone_enable(window);
+  
+  gtk_window_set_default_size(window, WINDOW_X, WINDOW_Y);
+  gtk_window_set_decorated(window, false);
 
   provider = gtk_css_provider_new();
   gtk_css_provider_load_from_path(provider, STYLE_FILE);
@@ -81,9 +86,9 @@ void activate(GtkApplication *app, gpointer user_data)
   label = gtk_label_new(temperature);
   gtk_widget_add_css_class(label, "label");
   gtk_widget_add_tick_callback(label, tick_callback, NULL, NULL);
-  gtk_window_set_child(GTK_WINDOW(window), label);
+  gtk_window_set_child(window, label);
 
-  gtk_window_present(GTK_WINDOW(window));
+  gtk_window_present(window);
 
   g_object_unref(provider);
 }
