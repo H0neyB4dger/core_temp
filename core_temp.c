@@ -74,6 +74,7 @@ void activate(GtkApplication *app, gpointer user_data)
   gtk_widget_set_visual(window, visual);
 
   gtk_window_move(GTK_WINDOW(window), WIN_MOVE_X, WIN_MOVE_Y);
+  gtk_window_set_keep_above(GTK_WINDOW(window), true);
 
   provider = gtk_css_provider_new();
   gtk_css_provider_load_from_path(provider, STYLE_FILE, NULL);
