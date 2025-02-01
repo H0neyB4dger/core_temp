@@ -1,4 +1,3 @@
-#include <gtk4-layer-shell/gtk4-layer-shell.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -10,11 +9,10 @@
 #define SCREEN_WIDTH 1895 //хз почему так, впрочем это относится ко всей программе
 #define RIGHT_MOVE_CAP 25
 #define WIN_MOVE_X (SCREEN_WIDTH - WINDOW_X - 5 + RIGHT_MOVE_CAP)
-#define WIN_MOVE_Y 80
+#define WIN_MOVE_Y 0
 #define TEMP_FORMAT "%.1lf\u00b0C"
 #define TEMP_FILE "./temperature.txt"
 #define TEMP_SCRIPT "./temp.sh"
-#define MOVE_SCRIPT "./move.sh"
 #define STYLE_FILE "./style.css"
 
 
@@ -46,11 +44,7 @@ void replace_comma_with_point(char *str) {
 gboolean tick_callback(GtkWidget *label, GdkFrameClock *frame_clock, gpointer user_data)
 {
   if (LAST_TIME == 0) {
-    char command[TEMP_SIZE];
-
     LAST_TIME = time(NULL);
-    snprintf(command, TEMP_SIZE, "%s %d %d", MOVE_SCRIPT, WIN_MOVE_X, WIN_MOVE_Y);
-    system(command);
   }
   else if (time(NULL) - LAST_TIME >= 1) {
     char temperature[TEMP_SIZE];
@@ -64,32 +58,40 @@ gboolean tick_callback(GtkWidget *label, GdkFrameClock *frame_clock, gpointer us
 
 void activate(GtkApplication *app, gpointer user_data)
 {
-  GtkWindow *window;
+  GtkWidget *window;
   GtkWidget *label;  
   GtkCssProvider *provider;
+  GdkScreen *screen;
+  GdkVisual *visual;
   char temperature[TEMP_SIZE];
 
-  window = GTK_WINDOW(gtk_application_window_new(app));
-  gtk_layer_init_for_window(window);
-  gtk_layer_set_layer(window, GTK_LAYER_SHELL_LAYER_TOP);
-  gtk_layer_auto_exclusive_zone_enable(window);
-  
-  gtk_window_set_default_size(window, WINDOW_X, WINDOW_Y);
-  gtk_window_set_decorated(window, false);
+  window = gtk_application_window_new(app);
+  gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_X, WINDOW_Y);
+  gtk_window_set_decorated(GTK_WINDOW(window), false);
+
+  screen = gdk_screen_get_default();
+  visual = gdk_screen_get_rgba_visual(screen);
+  gtk_widget_set_visual(window, visual);
+
+  gtk_window_move(GTK_WINDOW(window), WIN_MOVE_X, WIN_MOVE_Y);
 
   provider = gtk_css_provider_new();
-  gtk_css_provider_load_from_path(provider, STYLE_FILE);
-  gtk_style_context_add_provider_for_display(gdk_display_get_default(), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+  gtk_css_provider_load_from_path(provider, STYLE_FILE, NULL);
+  gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
   snprintf(temperature, TEMP_SIZE, TEMP_FORMAT, get_temp());
   replace_comma_with_point(temperature);
+
   label = gtk_label_new(temperature);
-  gtk_widget_add_css_class(label, "label");
   gtk_widget_add_tick_callback(label, tick_callback, NULL, NULL);
-  gtk_window_set_child(window, label);
+  gtk_container_add(GTK_CONTAINER(window), label);
 
-  gtk_window_present(window);
+  gtk_widget_show_all(window);
 
+  cairo_region_t *region = cairo_region_create();
+  gdk_window_input_shape_combine_region(gtk_widget_get_window(window), region, 0, 0);
+
+  cairo_region_destroy(region);
   g_object_unref(provider);
 }
 

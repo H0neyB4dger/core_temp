@@ -1,8 +1,8 @@
-window.background {
+window {
   background-color: transparent;
 }
 
-.label {
+label {
   color: #00ff55;
   font-family: monospace;
   font-size: 35px;

@@ -1,2 +1,2 @@
-gcc $(pkg-config --cflags gtk4) -o core_temp core_temp.c -lgtk4-layer-shell $(pkg-config --libs gtk4) \
+gcc `pkg-config --cflags gtk+-3.0` -o core_temp core_temp.c `pkg-config --libs gtk+-3.0` \
 && ./core_temp
