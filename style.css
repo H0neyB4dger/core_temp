@@ -3,7 +3,8 @@ window {
 }
 
 label {
-  color: #00ff55;
+  color: #00dede;
   font-family: monospace;
+  font-weight: bold;
   font-size: 35px;
 }

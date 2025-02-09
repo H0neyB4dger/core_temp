@@ -5,15 +5,18 @@
 #include <time.h>
 #define TEMP_SIZE 128
 #define WINDOW_X  140
-#define WINDOW_Y   60
+#define WINDOW_Y   40
 #define SCREEN_WIDTH 1895 //хз почему так, впрочем это относится ко всей программе
+#define SCREEN_HEIGHT 1040
 #define RIGHT_MOVE_CAP 25
-#define WIN_MOVE_X (SCREEN_WIDTH - WINDOW_X - 5 + RIGHT_MOVE_CAP)
-#define WIN_MOVE_Y 0
+#define WIN_MOVE_X SCREEN_WIDTH
+#define WIN_MOVE_Y SCREEN_HEIGHT
 #define TEMP_FORMAT "%.1lf\u00b0C"
-#define TEMP_FILE "./temperature.txt"
-#define TEMP_SCRIPT "./temp.sh"
-#define STYLE_FILE "./style.css"
+#define PATH "./"
+#define TEMP_FILE "temperature.txt"
+#define TEMP_SCRIPT "temp.sh"
+#define STYLE_FILE "style.css"
+#define ICON_FILE "temp.ico"
 
 
 time_t LAST_TIME = 0;
@@ -25,8 +28,8 @@ double get_temp(void)
   double temperature;
   double dec_part;
 
-  system(TEMP_SCRIPT " > " TEMP_FILE);
-  temperature_file = fopen(TEMP_FILE, "r");
+  system(PATH TEMP_SCRIPT " > " PATH TEMP_FILE);
+  temperature_file = fopen(PATH TEMP_FILE, "r");
   fscanf(temperature_file, "%lf.%lf", &temperature, &dec_part);
   temperature += dec_part / 10;
   fclose(temperature_file);
@@ -58,33 +61,35 @@ gboolean tick_callback(GtkWidget *label, GdkFrameClock *frame_clock, gpointer us
 
 void activate(GtkApplication *app, gpointer user_data)
 {
-  GtkWidget *window;
-  GtkWidget *label;  
-  GtkCssProvider *provider;
-  GdkScreen *screen;
-  GdkVisual *visual;
+  GtkWidget           *window;
+  GtkWidget            *label;  
+  GtkCssProvider    *provider;
+  GdkScreen           *screen;
+  GdkVisual           *visual;
+  GdkPixbuf           *pixbuf;
   char temperature[TEMP_SIZE];
 
   window = gtk_application_window_new(app);
   gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_X, WINDOW_Y);
   gtk_window_set_decorated(GTK_WINDOW(window), false);
+  pixbuf = gdk_pixbuf_new_from_file(PATH ICON_FILE, NULL);
+  gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
 
   screen = gdk_screen_get_default();
   visual = gdk_screen_get_rgba_visual(screen);
   gtk_widget_set_visual(window, visual);
-
-  gtk_window_move(GTK_WINDOW(window), WIN_MOVE_X, WIN_MOVE_Y);
   gtk_window_set_keep_above(GTK_WINDOW(window), true);
+  gtk_window_move(GTK_WINDOW(window), WIN_MOVE_X, WIN_MOVE_Y);
 
   provider = gtk_css_provider_new();
-  gtk_css_provider_load_from_path(provider, STYLE_FILE, NULL);
+  gtk_css_provider_load_from_path(provider, PATH STYLE_FILE, NULL);
   gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
   snprintf(temperature, TEMP_SIZE, TEMP_FORMAT, get_temp());
   replace_comma_with_point(temperature);
 
   label = gtk_label_new(temperature);
-  gtk_widget_add_tick_callback(label, tick_callback, NULL, NULL);
+  gtk_widget_add_tick_callback(label, tick_callback, window, NULL);
   gtk_container_add(GTK_CONTAINER(window), label);
 
   gtk_widget_show_all(window);
@@ -109,3 +114,12 @@ int main(int argc, char **argv)
 
   return status;
 }
+
+// TODO:
+// одновременно только одно окно
+// узнать размер экрана и определить move_x, move_y
+// таймер уже встроенный в callback вроде есть
+// судя по посту того чувака, достучаться до сенсора самому
+//   очень сложно, так что лучше остаться на sensors и написать
+// нормальную обёртку. В идеале, без temp.sh и temperature.txt
+// tmpfile()
