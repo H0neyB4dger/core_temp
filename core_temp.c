@@ -36,6 +36,7 @@ double get_temp(void)
   return temperature;
 }
 
+
 void replace_comma_with_point(char *str) {
   while (*str) {
     if (*str == ',')
@@ -107,19 +108,22 @@ int main(int argc, char **argv)
   double temperature;
   int status;
 
+  system("touch " PATH TEMP_FILE);
   app = gtk_application_new("org.gtk.core_temp", G_APPLICATION_DEFAULT_FLAGS);
   g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
   status = g_application_run(G_APPLICATION(app), argc, argv);
+  
+  system("rm " PATH TEMP_FILE);
   g_object_unref(app);
 
   return status;
 }
 
 // TODO:
-// одновременно только одно окно
-// узнать размер экрана и определить move_x, move_y
-// таймер уже встроенный в callback вроде есть
 // судя по посту того чувака, достучаться до сенсора самому
 //   очень сложно, так что лучше остаться на sensors и написать
 // нормальную обёртку. В идеале, без temp.sh и temperature.txt
 // tmpfile()
+// одновременно только одно окно
+// узнать размер экрана и определить move_x, move_y
+// таймер уже встроенный в callback вроде есть
