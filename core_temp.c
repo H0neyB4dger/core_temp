@@ -13,6 +13,7 @@
 #define WIN_MOVE_Y SCREEN_HEIGHT
 #define TEMP_FORMAT "%.1lf\u00b0C"
 #define PATH "./"
+#define SINGLE_FILE "is_launched.txt"
 #define TEMP_FILE "temperature.txt"
 #define TEMP_SCRIPT "temp.sh"
 #define STYLE_FILE "style.css"
@@ -21,6 +22,15 @@
 
 time_t LAST_TIME = 0;
 
+
+bool app_is_launched(void)
+{
+  FILE *single = fopen(PATH SINGLE_FILE, "r");
+  if (single == NULL)
+    return false;
+  fclose(single);
+  return true;
+}
 
 double get_temp(void) 
 {
@@ -108,11 +118,17 @@ int main(int argc, char **argv)
   double temperature;
   int status;
 
+  if (app_is_launched())
+  {
+    return 0;
+  }
+  system("echo true > " PATH SINGLE_FILE);
   system("touch " PATH TEMP_FILE);
   app = gtk_application_new("org.gtk.core_temp", G_APPLICATION_DEFAULT_FLAGS);
   g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
   status = g_application_run(G_APPLICATION(app), argc, argv);
   
+  system("rm " PATH SINGLE_FILE);
   system("rm " PATH TEMP_FILE);
   g_object_unref(app);
 
@@ -125,5 +141,6 @@ int main(int argc, char **argv)
 // нормальную обёртку. В идеале, без temp.sh и temperature.txt
 // tmpfile()
 // одновременно только одно окно
+// 
 // узнать размер экрана и определить move_x, move_y
 // таймер уже встроенный в callback вроде есть
