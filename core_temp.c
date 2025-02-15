@@ -1,7 +1,5 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
@@ -17,7 +15,6 @@
 #define WIN_MOVE_Y SCREEN_HEIGHT
 #define TEMP_FORMAT "%.1lf\u00b0C"
 #define PATH "./"
-#define SINGLE_FILE "is_launched.txt"
 #define STYLE_FILE "style.css"
 #define ICON_FILE "temp.ico"
 
@@ -25,48 +22,23 @@
 time_t LAST_TIME = 0;
 
 
-bool app_is_launched(void)
-{
-  FILE *single = fopen(PATH SINGLE_FILE, "r");
-  if (single == NULL)
-    return false;
-  fclose(single);
-  return true;
-}
-
 double get_temp(void)
 {
-  double temp;
-  pid_t baby_pid;
-  int fd[2];
+  FILE *file = popen("sensors", "r");
+  double temp_whole, temp_frac;
   int buf_len = 1024;
-  char buf[buf_len];
-  pipe(fd);
-  baby_pid = fork();
-  if (baby_pid == 0)
-  {
-    close(fd[0]);
-    close(STDOUT_FILENO);
-    dup(fd[1]);
-    execlp("sensors", "sensors", NULL);
-  }
-  else
-  {
-    double temp_whole, temp_frac;
-    char *ptr_start, *ptr_frac, *ptr_end;
-    char needle[] = "Tctl:";
-    size_t needle_len = strlen(needle);
-    close(fd[1]);
-    read(fd[0], buf, buf_len);
-    ptr_start = strstr(buf, needle);
-    ptr_start = strchr(ptr_start + needle_len, '+') + 1;
-    ptr_frac = strchr(ptr_start, '.') + 1;
-    ptr_end = strstr(ptr_frac, "°");
-    temp_whole = (double) atoi(ptr_start);
-    temp_frac = (double) atoi(ptr_frac) / pow(10, ptr_end - ptr_frac);
-    temp = temp_whole + temp_frac;
-  }
-  return temp;
+  char buf[buf_len], *ptr_start, *ptr_frac, *ptr_end;
+  char needle[] = "Tctl:";
+  size_t needle_len = strlen(needle);
+  fread(buf, sizeof(char), buf_len, file);
+  pclose(file);
+  ptr_start = strstr(buf, needle);
+  ptr_start = strchr(ptr_start + needle_len, '+') + 1;
+  ptr_frac = strchr(ptr_start, '.') + 1;
+  ptr_end = strstr(ptr_frac, "°");
+  temp_whole = (double) atoi(ptr_start);
+  temp_frac = (double) atoi(ptr_frac) / pow(10, ptr_end - ptr_frac);
+  return temp_whole + temp_frac;
 }
 
 void replace_comma_with_point(char *str) {
@@ -139,16 +111,10 @@ int main(int argc, char **argv)
   GtkApplication *app;
   int status;
 
-  // if (app_is_launched())
-  // {
-  //   return 0;
-  // }
-  // system("echo true > " PATH SINGLE_FILE);
   app = gtk_application_new("org.gtk.core_temp", G_APPLICATION_DEFAULT_FLAGS);
   g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
   status = g_application_run(G_APPLICATION(app), argc, argv);
   
-  // system("rm " PATH SINGLE_FILE);
   g_object_unref(app);
 
   return status;
@@ -159,4 +125,3 @@ int main(int argc, char **argv)
 // узнать размер экрана и определить move_x, move_y
 // таймер уже встроенный в callback вроде есть
 // почистить include
-// где заканчивается дочерний процесс? Может нужно закончить?
