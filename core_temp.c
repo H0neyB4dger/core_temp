@@ -1,16 +1,16 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
-#define TEMP_SIZE 128
-#define WINDOW_X  140
-#define WINDOW_Y   40
-#define SCREEN_WIDTH 1895 //хз почему так, впрочем это относится ко всей программе
-#define SCREEN_HEIGHT 1040
-#define RIGHT_MOVE_CAP 25
+#define TEMP_SIZE       128
+#define WINDOW_X        140
+#define WINDOW_Y         40
+#define SCREEN_WIDTH   1895 //хз почему так, впрочем это относится ко всей прогр     амме
+#define SCREEN_HEIGHT  1040
 #define WIN_MOVE_X SCREEN_WIDTH
 #define WIN_MOVE_Y SCREEN_HEIGHT
 #define TEMP_FORMAT "%.1lf\u00b0C"
@@ -121,7 +121,6 @@ int main(int argc, char **argv)
 }
 
 // TODO:
-// одновременно только одно окно
 // узнать размер экрана и определить move_x, move_y
 // таймер уже встроенный в callback вроде есть
 // почистить include
