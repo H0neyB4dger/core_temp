@@ -6,21 +6,29 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
-#define TEMP_SIZE       128
-#define WINDOW_X        140
-#define WINDOW_Y         40
-#define SCREEN_WIDTH   1895 //хз почему так, впрочем это относится ко всей прогр     амме
-#define SCREEN_HEIGHT  1040
-#define WIN_MOVE_X SCREEN_WIDTH
-#define WIN_MOVE_Y SCREEN_HEIGHT
-#define TEMP_FORMAT "%.1lf\u00b0C"
-#define PATH "./"
-#define STYLE_FILE "style.css"
-#define ICON_FILE "temp.ico"
+#define TEMP_SIZE                 128
+#define TEMP_FORMAT    "%.1lf\u00b0C"
+#define PATH                     "./"
+#define STYLE_FILE        "style.css"
+#define ICON_FILE          "temp.ico"
 
 
 time_t LAST_TIME = 0;
 
+
+int *get_screen_xy(int *screen_xy)
+{
+  FILE *screen_text = popen("xrandr", "r");
+  int line_len = 512;
+  char line[line_len], *ptr;
+  char needle[] = "current";
+  size_t needle_len = strlen(needle);
+  while (fgets(line, line_len, screen_text) && !(ptr = strstr(line, needle)))
+  {
+  }
+  sscanf(ptr + needle_len, "%d x %d", &screen_xy[0], &screen_xy[1]);
+  return screen_xy;
+}
 
 double get_temp(void)
 {
@@ -73,9 +81,14 @@ void activate(GtkApplication *app, gpointer user_data)
   GdkVisual           *visual;
   GdkPixbuf           *pixbuf;
   char temperature[TEMP_SIZE];
+  int window_x = 140;
+  int window_y = 40;
+  int offset_x = 0;
+  int offset_y = 0;
+  int screen_xy[2];
 
   window = gtk_application_window_new(app);
-  gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_X, WINDOW_Y);
+  gtk_window_set_default_size(GTK_WINDOW(window), window_x, window_y);
   gtk_window_set_decorated(GTK_WINDOW(window), false);
   pixbuf = gdk_pixbuf_new_from_file(PATH ICON_FILE, NULL);
   gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
@@ -84,7 +97,8 @@ void activate(GtkApplication *app, gpointer user_data)
   visual = gdk_screen_get_rgba_visual(screen);
   gtk_widget_set_visual(window, visual);
   gtk_window_set_keep_above(GTK_WINDOW(window), true);
-  gtk_window_move(GTK_WINDOW(window), WIN_MOVE_X, WIN_MOVE_Y);
+  get_screen_xy(screen_xy);
+  gtk_window_move(GTK_WINDOW(window), screen_xy[0] - offset_x, screen_xy[1] - offset_y);
 
   provider = gtk_css_provider_new();
   gtk_css_provider_load_from_path(provider, PATH STYLE_FILE, NULL);
@@ -121,6 +135,4 @@ int main(int argc, char **argv)
 }
 
 // TODO:
-// узнать размер экрана и определить move_x, move_y
 // таймер уже встроенный в callback вроде есть
-// почистить include
