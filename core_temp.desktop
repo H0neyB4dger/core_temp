@@ -3,6 +3,6 @@ Encoding=UTF-8
 Version=1.0
 Type=Application
 Terminal=false
-Exec=/home/madara/core_temp/start.sh
+Exec=/home/madara/core_temp/start_core_temp.sh
 Name=core_temp
 Icon=/home/madara/core_temp/temp.png
