@@ -2,3 +2,4 @@ core_temp
 temperature.txt
 process.txt
 is_launched.txt
+.vscode

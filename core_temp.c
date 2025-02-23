@@ -5,15 +5,15 @@
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
-#include <time.h>
 #define TEMP_SIZE                 128
+#define TICK_TIME             1000000
 #define TEMP_FORMAT    "%.1lf\u00b0C"
 #define PATH                     "./"
 #define STYLE_FILE        "style.css"
 #define ICON_FILE          "temp.ico"
 
 
-time_t LAST_TIME = 0;
+gint64 LAST_TIME = 0;
 
 
 int *get_screen_xy(int *screen_xy)
@@ -59,15 +59,16 @@ void replace_comma_with_point(char *str) {
 
 gboolean tick_callback(GtkWidget *label, GdkFrameClock *frame_clock, gpointer user_data)
 {
+  gint64 time = gdk_frame_clock_get_frame_time(frame_clock);
   if (LAST_TIME == 0) {
-    LAST_TIME = time(NULL);
+    LAST_TIME = time;
   }
-  else if (time(NULL) - LAST_TIME >= 1) {
+  else if (time - LAST_TIME >= TICK_TIME) {
     char temperature[TEMP_SIZE];
     snprintf(temperature, TEMP_SIZE, TEMP_FORMAT, get_temp());
     replace_comma_with_point(temperature);
     gtk_label_set_label(GTK_LABEL(label), temperature);
-    LAST_TIME = time(NULL);
+    LAST_TIME = time;
   }
   return G_SOURCE_CONTINUE;
 }
@@ -133,6 +134,3 @@ int main(int argc, char **argv)
 
   return status;
 }
-
-// TODO:
-// таймер уже встроенный в callback вроде есть
