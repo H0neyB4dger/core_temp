@@ -1,6 +1,11 @@
 #!/bin/bash
 echo '#!/bin/bash
-'"cd $PWD && ./core_temp" > ./start_core_temp.sh &&
+PID=$(pidof core_temp)
+if [ $PID ]; then
+'"  echo core_temp is already launched
+else
+  cd $PWD && ./core_temp
+fi" > ./start_core_temp.sh &&
 chmod 700 ./start_core_temp.sh &&
 echo "[Desktop Entry]
 Encoding=UTF-8
